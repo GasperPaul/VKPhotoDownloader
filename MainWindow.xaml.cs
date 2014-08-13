@@ -1,119 +1,177 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Net;
-using System.Xml;
-using System.IO;
+using System.ComponentModel;
 using System.Diagnostics;
-using System.Threading.Tasks;
+using System.IO;
+using System.Linq;
+using System.Net;
 using System.Windows;
-using System.Windows.Forms;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
+using MahApps.Metro.Controls;
+using MahApps.Metro.Controls.Dialogs;
 
 namespace VKPhotoDownloader
 {
-    public partial class MainWindow : Window
+    public partial class MainWindow : MetroWindow
     {
-        private string token;
+        private VKAPI vkApi;
+        private DownloadData data;
+        private ImageData imgData;
 
         public MainWindow()
         {
             InitializeComponent();
-        }
-
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            System.Windows.Forms.Integration.WindowsFormsHost browserHost = new System.Windows.Forms.Integration.WindowsFormsHost();
-            System.Windows.Forms.WebBrowser Browser = new System.Windows.Forms.WebBrowser();
-            grid.Children.Add(browserHost);
-            Browser.ScriptErrorsSuppressed = true;
-            browserHost.Child = Browser;
-            Browser.Navigated += Browser_Navigated;
-            Browser.Navigate(new Uri(@"https://oauth.vk.com/authorize?client_id=3675941&scope=photos,groups&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token"));
-        }
-
-        void Browser_Navigated(object sender, WebBrowserNavigatedEventArgs e)
-        {
-            if (e.Url.AbsoluteUri.Contains("https://oauth.vk.com/blank.html#error"))
+            vkApi = VKAPI.Instance;
+            data = new DownloadData()
             {
-                string[] tmp = e.Url.AbsoluteUri.Split(new char[1] { '#' }, StringSplitOptions.RemoveEmptyEntries);
-                string[] error = ((tmp[1].Split('&')[2]).Split('='))[1].Split(new char[3] { '%', '2', '0' });
-                string errorMsg = "";
-                foreach (string s in error)
-                    errorMsg += " " + s;
-                errorMsg += '.';
-                System.Windows.MessageBox.Show(errorMsg, @"Error");
+                UserID = "id1"
+            };
+            imgData = new ImageData();
+            this.albumURL.DataContext = data;
+        }
+
+        void Browser_Navigated(object sender, NavigationEventArgs e)
+        {
+            if (e.Uri.AbsoluteUri.Contains("https://oauth.vk.com/blank.html#error"))
+            {
+                string errorMsg = vkApi.HandleOAuthError(e.Uri.AbsoluteUri);
+                this.ShowMessageAsync(@"Error", errorMsg);
                 Debug.WriteLine(@"OAuth error: " + errorMsg);
                 System.Windows.Application.Current.Shutdown();
             }
-            if (e.Url.AbsoluteUri.Contains("https://oauth.vk.com/blank.html#access"))
+            if (e.Uri.AbsoluteUri.Contains("https://oauth.vk.com/blank.html#code"))
             {
-                string[] tmp = e.Url.AbsoluteUri.Split(new char[1] { '#' }, StringSplitOptions.RemoveEmptyEntries);
-                this.token = (tmp[1].Split('&')[0]);
-                (sender as System.Windows.Forms.WebBrowser).Parent.Dispose();
-                this.SizeToContent = System.Windows.SizeToContent.Manual; this.Width = 395; this.Height = 120;
+                vkApi.Token = e.Uri.AbsoluteUri;
+                this.tabControl.SelectedIndex = 1;
             }
             else
             {
-                (sender as System.Windows.Forms.WebBrowser).Width = 607;
-                (sender as System.Windows.Forms.WebBrowser).Height = (sender as System.Windows.Forms.WebBrowser).DocumentTitle.Contains(@"Разрешение доступа") ? 427 : 315;
+                this.Height = 423;
+                this.Width = 672;
             }
         }
 
-        private string ExecuteApiCommand(string methodName, string param)
+        private void btnShowAlbums_Click(object sender, RoutedEventArgs e)
         {
-            string requestURL = "https://api.vk.com/method/" + methodName + ".xml?" + param + "&" + token;
-            WebRequest request = WebRequest.Create(requestURL);
-            using (WebResponse response = request.GetResponse())
-            using (System.IO.Stream data = response.GetResponseStream())
-            using (System.IO.StreamReader rdr = new System.IO.StreamReader(data))
-                return rdr.ReadToEnd();
+            if (data.UserID.Trim().Equals(@""))
+            {
+                albumURL.Focus();
+                return;
+            }
+
+            try
+            {
+                if (data.UserID.Trim().Contains("id"))
+                    data.UserID = data.UserID.Trim().Remove(0, 2);
+            }
+            catch (Exception ex)
+            {
+                this.ShowMessageAsync(@"Помилка", @"Невірний формат поля ""Звідки"".");
+                Debug.WriteLine("UserId error: " + ex.Message);
+                return;
+            }
+
+            imgData.AlbumList = vkApi.ExecuteApiCommand(@"photos.getAlbums", @"owner_id=" + data.UserID + @"&album_ids=-6,-7,-15&need_covers=1");
+            if (imgData.AlbumList != null)
+            {
+                this.albumThumbnails.ItemsSource = imgData.AlbumList;
+                this.albumThumbnailsHolder.Visibility = System.Windows.Visibility.Visible;
+            };
         }
 
-        private bool ParseXml(string type, string XmlString)
+        private void Button_To_Click(object sender, RoutedEventArgs e)
         {
-            var xDoc = System.Xml.Linq.XDocument.Parse(XmlString);
-            if (xDoc.Root.Name.ToString() == "error")
+            using (var dlg = new System.Windows.Forms.FolderBrowserDialog()
+                {
+                    Description = @"Виберіть місце збереження фото",
+                    RootFolder = Environment.SpecialFolder.Desktop,
+                    ShowNewFolderButton = true
+                })
             {
-                var str = "API error:\n" + xDoc.Descendants("error")
-                                               .Select(el => el.Element("error_msg").Value)
-                                               .ToList<String>()[0];
-                Debug.WriteLine(str);
-                System.Windows.MessageBox.Show(str, @"Error");
-                return false;
+                if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    data.SaveDir = dlg.SelectedPath;
+                    this.saveDir.DataContext = data;
+                };
             }
-            switch (type)
+        }
+
+        private void btnNext_Click(object sender, RoutedEventArgs e)
+        {
+            var selection = (this.albumThumbnails.SelectedItem as Thumbnail);
+            if (selection == null || selection.Name == null)
             {
-                case ("photos.get"):
-                    var photos = xDoc.Descendants("photo")
-                                     .Where(a => a.Element("src_xxbig") != null)
-                                     .Select(a => a.Element("src_xxbig").Value);
-                    int counter = 0;
-                    foreach (var s in photos) counter++;
-                    progressBar.Maximum = counter;
-                    progressBar.IsIndeterminate = false;
-                    progressBar.Value = 0;
-                    foreach (var s in photos)
+                this.ShowMessageAsync(@"", @"Оберіть альбом для перегляду.");
+                return;
+            }
+
+            try
+            {
+                imgData.ImageList = vkApi.ExecuteApiCommand(@"photos.get", @"owner_id=" + data.UserID + @"&album_id=" + selection.Name + @"&rev=1");
+            }
+            catch (Exception ex)
+            {
+                this.ShowMessageAsync(@"Помилка", @"Неможливо отримати дані з мережі.");
+                Debug.WriteLine(@"Network Error: " + ex.Message);
+            }
+
+            if (imgData.ImageList != null)
+            {
+                this.thumbnails.ItemsSource = imgData.ImageList;
+                tabControl.SelectedIndex++;
+            }
+        }
+
+        private void btnPrevious_Click(object sender, RoutedEventArgs e)
+        {
+            tabControl.SelectedIndex--;
+        }
+
+        private void btnDownload_Click(object sender, RoutedEventArgs e)
+        {
+            if (data.SaveDir == null || !Directory.Exists(data.SaveDir.Trim()))
+            {
+                this.ShowMessageAsync(@"Помилка", @"Невірний формат поля ""Куди"".");
+                this.saveDir.Focus();
+                return;
+            }
+
+            progressBar.Value = 0;
+            progressBar.Visibility = System.Windows.Visibility.Visible;
+
+            var worker = new BackgroundWorker();
+            worker.WorkerReportsProgress = true;
+            worker.DoWork += worker_DoWork;
+            worker.RunWorkerCompleted += worker_RunWorkerCompleted;
+            worker.ProgressChanged += worker_ProgressChanged;
+            worker.RunWorkerAsync();
+        }
+
+        void worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            progressBar.Visibility = System.Windows.Visibility.Collapsed;
+            this.ShowMessageAsync(@"Завантаження завершено!", @"");
+        }
+
+        void worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            progressBar.Value += e.ProgressPercentage;
+        }
+
+        void worker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            byte[] buffer = new byte[4096];
+            int step = 100 / imgData.ImageList.Count(photo => photo.Checked);
+            foreach (var photo in imgData.ImageList)
+            {
+                if (photo.Checked)
+                {
+                    try
                     {
-                        progressBar.Value++;
-
-                        var names = s.Split('/');
-                        var name = names[names.Length - 1];
-
-                        WebRequest request = WebRequest.Create(s);
-                        using (WebResponse response = request.GetResponse())
-                        using (System.IO.Stream data = response.GetResponseStream())
-                        using (FileStream file = File.Create(saveDir.Text + @"\" + name))
+                        using (WebResponse response = WebRequest.Create(photo.BigImage).GetResponse())
+                        using (Stream data = response.GetResponseStream())
+                        using (FileStream file = File.Create(this.data.SaveDir + @"/" + photo.BigImage.Split('/').Last()))
                         {
-                            byte[] buffer = new byte[4096];
                             int bytesRead;
                             do
                             {
@@ -122,72 +180,28 @@ namespace VKPhotoDownloader
                             } while (bytesRead != 0);
                         }
                     }
-                    progressBar.Visibility = System.Windows.Visibility.Hidden;
-                    break;
-                default: break;
-            }
-            return true;
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            if (albumURL.Text.Trim().Equals(@""))
-            {
-                albumURL.Focus();
-                return;
-            }
-            string from = albumURL.Text;
-            string[] fromData;
-            try
-            {
-                string[] tmp = from.Split("album".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-                fromData = tmp[tmp.Length - 1].Split('_');
-                switch (fromData[1])
-                {
-                    case ("0"):
-                        fromData[1] = "profile";
-                        break;
-                    case ("00"):
-                        fromData[1] = "wall";
-                        break;
-                    case ("000"):
-                        fromData[1] = "saved";
-                        break;
-                    default: break;
+                    catch (Exception ex)
+                    {
+                        this.ShowMessageAsync(@"Помилка", @"Неможливо отримати дані з мережі.");
+                        Debug.WriteLine(@"Network Error: " + ex.Message);
+                    }
+                    (sender as BackgroundWorker).ReportProgress(step);
                 }
             }
-            catch (Exception ex)
-            {
-                System.Windows.MessageBox.Show(@"Невірний формат поля ""Звідки"".", @"Помилка");
-                return;
-            }
-            if (!Directory.Exists(saveDir.Text.Trim()))
-            {
-                System.Windows.MessageBox.Show(@"Невірний формат поля ""Куди"".", @"Помилка");
-                return;
-            }
-            progressBar.IsIndeterminate = true;
-            progressBar.Visibility = System.Windows.Visibility.Visible;
-            if (!ParseXml(@"photos.get", ExecuteApiCommand(@"photos.get", @"oid=" + fromData[0] + @"&aid=" + fromData[1] + @"&rev=1")))
-            {
-                progressBar.IsIndeterminate = false;
-                progressBar.Visibility = System.Windows.Visibility.Hidden;
-            };
         }
 
-        private void Button_Click_1(object sender, RoutedEventArgs e)
+        private void btnSelectAll_Click(object sender, RoutedEventArgs e)
         {
-            using (FolderBrowserDialog dlg = new FolderBrowserDialog())
-            {
-                dlg.RootFolder = Environment.SpecialFolder.Desktop;
-                dlg.Description = @"Виберіть місце збереження фото";
-                dlg.ShowNewFolderButton = true;
-                ;
-                if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                {
-                    saveDir.Text = dlg.SelectedPath;
-                };
-            }
+            foreach (var photo in imgData.ImageList)
+                photo.Checked = true;
+            this.thumbnails.ItemsSource = null;
+            this.thumbnails.ItemsSource = imgData.ImageList;
+        }
+
+        private void MetroWindow_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed)
+                this.DragMove();
         }
     }
 }
