@@ -1,15 +1,50 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace VKPhotoDownloader
 {
-    public class DownloadData
+    public class DownloadData : INotifyPropertyChanged
     {
-        public string UserID { get; set; }
-        public string SaveDir { get; set; }
+        private string _userID;
+        public string UserID
+        {
+            get
+            {
+                return _userID;
+            }
+            set
+            {
+                _userID = value;
+                OnPropertyChanged("UserID");
+            }
+        }
+
+        private string _saveDir;
+        public string SaveDir
+        {
+            get
+            {
+                return _saveDir;
+            }
+            set
+            {
+                _saveDir = value;
+                OnPropertyChanged("SaveDir");
+            }
+        }
+
+        public string AlbumName { get; set; }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void OnPropertyChanged(string name)
+        {
+            PropertyChangedEventHandler handler = PropertyChanged;
+            if (handler != null)
+            {
+                handler(this, new PropertyChangedEventArgs(name));
+            }
+        }
     }
 
     public class ImageData
@@ -17,14 +52,38 @@ namespace VKPhotoDownloader
         public Thumbnails AlbumList { get; set; }
         public Thumbnails ImageList { get; set; }
     }
-    
-    public class Thumbnail
+
+    public class Thumbnail : INotifyPropertyChanged
     {
         public string Name { get; set; }
         public string Title { get; set; }
         public string BigImage { get; set; }
         public byte[] Image { get; set; }
-        public bool Checked { get; set; }
+
+        private bool _checked;
+        public bool Checked
+        {
+            get
+            {
+                return _checked;
+            }
+            set
+            {
+                _checked = value;
+                OnPropertyChanged("Checked");
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void OnPropertyChanged(string name)
+        {
+            PropertyChangedEventHandler handler = PropertyChanged;
+            if (handler != null)
+            {
+                handler(this, new PropertyChangedEventArgs(name));
+            }
+        }
     }
 
     public class Thumbnails : List<Thumbnail> { }

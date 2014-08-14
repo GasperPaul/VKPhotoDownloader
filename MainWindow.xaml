@@ -5,7 +5,7 @@
     xmlns:local="clr-namespace:VKPhotoDownloader"
     xmlns:controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro" 
     Title="VK Photo Downloader" 
-    Height="425" Width="675"
+    Height="425" Width="690"
     WindowStartupLocation="CenterScreen"
     MouseDown="MetroWindow_MouseDown">
     <Window.Resources>
@@ -36,19 +36,19 @@
                     <RowDefinition />
                     <RowDefinition />
                 </Grid.RowDefinitions>
-                <CheckBox Panel.ZIndex="1" VerticalAlignment="Top" IsChecked="{Binding Checked, Mode=TwoWay}" />
+                <CheckBox Panel.ZIndex="1" VerticalAlignment="Top" IsChecked="{Binding Checked}" />
                 <Image Panel.ZIndex="0" Name="thumbImg" Source="{Binding Image, Converter={StaticResource imageConverter}}" />
-                <Label Grid.Row="1" MaxWidth="{Binding ElementName=thumbImg, Path=Width}" Content="{Binding Title}" />
+                <TextBlock Grid.Row="1" MaxWidth="160" 
+                           Text="{Binding Title}" TextWrapping="WrapWithOverflow" TextAlignment="Center" />
             </Grid>
         </DataTemplate>
         <Style x:Key="thumbnailsListStyle" TargetType="ListBox">
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBox">
-                        <WrapPanel IsItemsHost="True" Orientation="Horizontal" 
+                        <WrapPanel IsItemsHost="True" Orientation="Horizontal" Margin="5"
                                    VerticalAlignment="Top" HorizontalAlignment="Left"
-                                   ItemWidth="{Binding ElementName=ZoomSlider, Path=Value}"
-                                   ItemHeight="{Binding ElementName=ZoomSlider, Path=Value}"/>
+                                   ItemWidth="150" ItemHeight="150"/>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -58,16 +58,50 @@
             <Path Width="39.25" Height="28" Canvas.Left="19.0002" Canvas.Top="24" Stretch="Fill" Fill="{DynamicResource BlackBrush}" Data="F1 M 19.0002,34L 19.0002,42L 43.7502,42L 33.7502,52L 44.2502,52L 58.2502,38L 44.2502,24L 33.7502,24L 43.7502,34L 19.0002,34 Z "/>
         </Canvas>
         <Canvas x:Key="appbar_arrow_left" Width="76" Height="76" Clip="F1 M 0,0L 76,0L 76,76L 0,76L 0,0">
-            <Path Width="39.25" Height="28" Canvas.Left="19.0002" Canvas.Top="24" Stretch="Fill" Fill="{DynamicResource BlackBrush}" Data="F1 M 19.0002,34L 19.0002,42L 43.7502,42L 33.7502,52L 44.2502,52L 58.2502,38L 44.2502,24L 33.7502,24L 43.7502,34L 19.0002,34 Z "/>
+            <Path Width="39.25" Height="28" Canvas.Left="17.75" Canvas.Top="24" Stretch="Fill" Fill="{DynamicResource BlackBrush}" Data="F1 M 57,42L 57,34L 32.25,34L 42.25,24L 31.75,24L 17.75,38L 31.75,52L 42.25,52L 32.25,42L 57,42 Z "/>
         </Canvas>
+        <!-- Custom flat buttons styles. -->
+        <Style x:Key="flatButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="{Binding Background, RelativeSource={RelativeSource Self}}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="ClipToBounds" Value="True" />
+        </Style>
+        <Style x:Key="btnNext" TargetType="Button" BasedOn="{StaticResource flatButton}">
+            <Setter Property="Content">
+                <Setter.Value>
+                    <Rectangle Width="25" Height="25" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">
+                        <Rectangle.OpacityMask>
+                            <VisualBrush Stretch="Fill" Visual="{StaticResource appbar_arrow_right}"/>
+                        </Rectangle.OpacityMask>
+                    </Rectangle>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="btnPrevious" TargetType="Button" BasedOn="{StaticResource flatButton}">
+            <Setter Property="Content">
+                <Setter.Value>
+                    <Rectangle Width="25" Height="25" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">
+                        <Rectangle.OpacityMask>
+                            <VisualBrush Stretch="Fill" Visual="{StaticResource appbar_arrow_left}"/>
+                        </Rectangle.OpacityMask>
+                    </Rectangle>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
+    <controls:MetroWindow.WindowCommands>
+        <controls:WindowCommands>
+            <Button Content="Про програму" Click="btnAbout_Click" />
+        </controls:WindowCommands>
+    </controls:MetroWindow.WindowCommands>
+    
     <TabControl Name="tabControl">
         <TabItem>
             <Grid>
                 <WebBrowser Grid.Row="0" Grid.Column="0" Grid.RowSpan="4" Grid.ColumnSpan="4"
-                            Source="https://oauth.vk.com/authorize?client_id=3675941;scope=photos,groups;redirect_uri=https://oauth.vk.com/blank.html;display=page;response_type=token"
-                            Name="browser" Navigated="Browser_Navigated" />
+                            Source="https://oauth.vk.com/authorize?client_id=3675941;scope=photos,groups;redirect_uri=https://oauth.vk.com/blank.html;display=page;v=5.24;response_type=token"
+                            Navigated="Browser_Navigated" />
             </Grid>
         </TabItem>
 
@@ -84,6 +118,7 @@
                 </Grid.ColumnDefinitions>
                 <Label Grid.Row="0" Grid.Column="0" Content="UserID" />
                 <TextBox Grid.Row="0" Grid.Column="1" Name="albumURL" 
+                         ToolTip="Формати вводу:&#13;https://vk.com/durov&#13;durov&#13;id1&#13;1"
                          Style="{StaticResource CueStyle}" Text="{Binding UserID}" />
                 <Button Grid.Row="0" Grid.Column="2" Content="Показати альбоми" Click="btnShowAlbums_Click"/>
                 <Grid Grid.Row="1" Grid.Column="0" 
@@ -92,24 +127,20 @@
                         <ColumnDefinition />
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
+                    <controls:ProgressRing Name="albumsProgress" Grid.Column="0" />
                     <ScrollViewer Grid.Column="0"
                                   Name="albumThumbnailsHolder"
-                                  VerticalScrollBarVisibility="Disabled" 
-                                  HorizontalScrollBarVisibility="Auto"
-                                  Visibility="Collapsed" >
+                                  VerticalScrollBarVisibility="Auto" 
+                                  HorizontalScrollBarVisibility="Disabled">
                         <ListBox Name="albumThumbnails"
                                  SelectionMode="Single"
                                  IsSynchronizedWithCurrentItem="True"
                                  Style="{StaticResource thumbnailsListStyle}"
                                  ItemTemplate="{StaticResource thumbnailsListItem}" />
                     </ScrollViewer>
-                    <Button Grid.Column="1" Style="{DynamicResource MetroCircleButtonStyle}" Width="50" Height="50" Click="btnNext_Click">
-                        <Rectangle Width="25" Height="25" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">
-                            <Rectangle.OpacityMask>
-                                <VisualBrush Stretch="Fill" Visual="{StaticResource appbar_arrow_right}"/>
-                            </Rectangle.OpacityMask>
-                        </Rectangle>
-                    </Button>
+                    <Button Grid.Column="1" Name="btnNext"
+                            Style="{StaticResource btnNext}" 
+                            Click="btnNext_Click" />
                 </Grid>
             </Grid>
         </TabItem>
@@ -128,39 +159,38 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <Button Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" VerticalAlignment="Center" Width="50" Height="50" Style="{DynamicResource MetroCircleButtonStyle}" Click="btnPrevious_Click">
-                    <Rectangle Width="25" Height="25" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">
-                        <Rectangle.OpacityMask>
-                            <VisualBrush Stretch="Fill" Visual="{StaticResource appbar_arrow_left}"/>
-                        </Rectangle.OpacityMask>
-                    </Rectangle>
-                </Button>
+                <Button Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" 
+                        Style="{StaticResource btnPrevious}" 
+                        Click="btnPrevious_Click" />
                 <Label Grid.Row="0" Grid.Column="1" Content="Куди" />
                 <TextBox Grid.Row="0" Grid.Column="2" Name="saveDir" 
                          Style="{DynamicResource CueStyle}" Text="{Binding SaveDir}"/>
-                <Button Grid.Row="0" Grid.Column="3" Content="Огляд..." Click="Button_To_Click" />
+                <Button Grid.Row="0" Grid.Column="3" Content="Огляд..." Click="btnTo_Click" />
                 <Button Grid.Row="0" Grid.Column="4" Content="Виділити всі" Click="btnSelectAll_Click" />
+                <Button Grid.Row="0" Grid.Column="5" Content="Зняти виділення" Click="btnDeselectAll_Click" />
+                <controls:ProgressRing Name="thumbnailsProgress" 
+                                       Grid.Row="1" Grid.Column="1"
+                                       Grid.RowSpan="1" Grid.ColumnSpan="5" />
                 <ScrollViewer Name="thumbnailsHolder"
                               Grid.Row="1" Grid.Column="1" 
                               Grid.RowSpan="1" Grid.ColumnSpan="5" 
                               VerticalScrollBarVisibility="Auto" 
-                              HorizontalScrollBarVisibility="Auto">
-                    <ListBox Name="thumbnails" IsSynchronizedWithCurrentItem="True"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <ListBox Name="thumbnails" 
+                             SelectionMode="Extended" 
+                             IsSynchronizedWithCurrentItem="True"
                              Style="{StaticResource thumbnailsListStyle}"
-                             ItemTemplate="{StaticResource thumbnailsListItem}" />
+                             ItemTemplate="{StaticResource thumbnailsListItem}"
+                             SelectionChanged="thumbnails_SelectionChanged" />
                 </ScrollViewer>
-                <Button Grid.Row="0" Grid.Column="5" Grid.RowSpan="2" Style="{DynamicResource MetroCircleButtonStyle}" Width="50" Height="50" Click="btnDownload_Click">
-                        <Rectangle Width="25" Height="25" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">
-                            <Rectangle.OpacityMask>
-                                <VisualBrush Stretch="Fill" Visual="{StaticResource appbar_arrow_right}"/>
-                            </Rectangle.OpacityMask>
-                        </Rectangle>
-                </Button>
-                <controls:MetroProgressBar Grid.Row="2" Grid.Column="0" Grid.RowSpan="1" Grid.ColumnSpan="6"
+                <Button Grid.Row="0" Grid.Column="6" Grid.RowSpan="2" Margin="5,0,0,0"
+                        Name="btnDownload" Style="{StaticResource btnNext}" 
+                        Click="btnDownload_Click" />
+                <controls:MetroProgressBar Grid.Row="2" Grid.Column="0" Grid.RowSpan="1" Grid.ColumnSpan="7"
                                            Height="10" Name="progressBar" Visibility="Collapsed" Maximum="100" />
             </Grid>
         </TabItem>
     </TabControl>
-
 </controls:MetroWindow>

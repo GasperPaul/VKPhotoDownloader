@@ -23,11 +23,21 @@ namespace VKPhotoDownloader
             }
             set
             {
-                _token = value.Split(new char[1] { '#' }, StringSplitOptions.RemoveEmptyEntries)[1].Split('&')[0];
+                _token = value.Split(new char[1] { '#' }, StringSplitOptions.RemoveEmptyEntries)[1].Split('&')[0]/*.Replace("code","access_token")*/;
             }
         }
 
-        public Thumbnails ExecuteApiCommand(string methodName, string param, Func<string, Thumbnails> customParser = null)
+        private string _currentUserID;
+        [Obsolete]
+        public string CurrentUserID
+        {
+            get
+            {
+                return _currentUserID ?? (_currentUserID = (string)ExecuteApiCommand("users.get", "v=5.24"));
+            }
+        }
+
+        public object ExecuteApiCommand(string methodName, string param, Func<string, object> customParser = null)
         {
             string requestURL = "https://api.vk.com/method/" + methodName + ".xml?" + param + "&" + Token;
             using (WebResponse response = WebRequest.Create(requestURL).GetResponse())
@@ -36,7 +46,7 @@ namespace VKPhotoDownloader
                 return ParseXml(methodName, rdr.ReadToEnd(), customParser);
         }
 
-        private Thumbnails ParseXml(string type, string XmlString, Func<string, Thumbnails> customParser)
+        private object ParseXml(string type, string XmlString, Func<string, object> customParser)
         {
             var imageList = new Thumbnails();
             var xDoc = System.Xml.Linq.XDocument.Parse(XmlString);
@@ -47,7 +57,6 @@ namespace VKPhotoDownloader
                                                .Select(el => el.Element("error_msg").Value)
                                                .ToList<String>()[0];
                 Debug.WriteLine(str);
-                System.Windows.MessageBox.Show(str, @"Error");
                 return null;
             }
 
@@ -107,6 +116,12 @@ namespace VKPhotoDownloader
                     foreach (var photo in photos)
                         imageList.Add(photo);
                     return imageList;
+
+                case "utils.resolveScreenName":
+                    return xDoc.Element("response").Element("object_id").Value;
+
+                case "users.get":
+                    return xDoc.Element("response").Element("id").Value;
 
                 default:
                     break;
