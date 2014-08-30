@@ -1,6 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Content>
   <UIElementsText>
+    <Text id="HelperOverlay">
+      <en value="Enter&#13;user ID&#13;&#9;id1 or 1&#13;link to his or her account&#13;&#9;https://vk.com/albums1&#13;&#9;https://vk.com/durov&#13;&#9;vk.com/durov&#13;&#9;durov&#13;or link to a specific album&#13;&#9;https://vk.com/album1_0" />
+      <uk value="Введіть&#13;ID користувача&#13;&#9;id1 або 1&#13;посилання на його акаунт&#13;&#9;https://vk.com/albums1&#13;&#9;https://vk.com/durov&#13;&#9;vk.com/durov&#13;&#9;durov&#13;чи посилання на конкретний альбом&#13;&#9;https://vk.com/album1_0" />
+      <ru value="Введите&#13;ID пользователя&#13;&#9;id1 или 1&#13;ссылку на его аккаунт&#13;&#9;https://vk.com/albums1&#13;&#9;https://vk.com/durov&#13;&#9;vk.com/durov&#13;&#9;durov&#13;или ссылку на конкретный альбом&#13;&#9;https://vk.com/album1_0" />
+    </Text>
     <Text id="Language">
       <en value="Language:" />
       <uk value="Мова:" />

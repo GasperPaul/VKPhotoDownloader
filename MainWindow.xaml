@@ -117,7 +117,7 @@
                         <Condition Binding="{Binding IsActive, ElementName=albumsProgress}" Value="False" />
                     </MultiDataTrigger.Conditions>
                     <MultiDataTrigger.Setters>
-                        <Setter Property="Text" Value="Введіть&#13;ID користувача&#13;&#9;id1 або 1&#13;посилання на його акаунт&#13;&#9;https://vk.com/albums1&#13;&#9;https://vk.com/durov&#13;&#9;vk.com/durov&#13;&#9;durov&#13;чи посилання на конкретний альбом&#13;&#9;https://vk.com/album1_0" />
+                        <Setter Property="Text" Value="{local:Translate HelperOverlay}" />
                     </MultiDataTrigger.Setters>
                 </MultiDataTrigger>
                 <MultiDataTrigger>
@@ -126,7 +126,7 @@
                         <Condition Binding="{Binding IsActive, ElementName=albumsProgress}" Value="False" />
                     </MultiDataTrigger.Conditions>
                     <MultiDataTrigger.Setters>
-                        <Setter Property="Text" Value="Введіть&#13;ID користувача&#13;&#9;id1 або 1&#13;посилання на його акаунт&#13;&#9;https://vk.com/albums1&#13;&#9;https://vk.com/durov&#13;&#9;vk.com/durov&#13;&#9;durov&#13;чи посилання на конкретний альбом&#13;&#9;https://vk.com/album1_0" />
+                        <Setter Property="Text" Value="{local:Translate HelperOverlay}" />
                     </MultiDataTrigger.Setters>
                 </MultiDataTrigger>
             </Style.Triggers>
