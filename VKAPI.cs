@@ -118,7 +118,7 @@ namespace VKPhotoDownloader
                     return imageList;
 
                 case "utils.resolveScreenName":
-                    return xDoc.Element("response").Element("object_id").Value;
+                    return xDoc.Element("response").HasElements ? xDoc.Element("response").Element("object_id").Value : null;
 
                 case "users.get":
                     return xDoc.Element("response").Element("id").Value;

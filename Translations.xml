@@ -1,0 +1,92 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Content>
+  <UIElementsText>
+    <Text id="Language">
+      <en value="Language:" />
+      <uk value="Мова:" />
+      <ru value="Язык:" />
+    </Text>
+    <Text id="About">
+      <en value="About" />
+      <uk value="Про програму" />
+      <ru value="О программе" />
+    </Text>
+    <Text id="ShowAlbums">
+      <en value="Show albums" />
+      <uk value="Показати альбоми" />
+      <ru value="Показать альбомы" />
+    </Text>
+    <Text id="SaveDirectory">
+      <en value="Save to" />
+      <uk value="Куди" />
+      <ru value="Куда" />
+    </Text>
+    <Text id="DirSearch">
+      <en value="View..." />
+      <uk value="Огляд..." />
+      <ru value="Просмотр..." />
+    </Text>
+    <Text id="SelectAll">
+      <en value="Select all" />
+      <uk value="Виділити всі" />
+      <ru value="Выделить все" />
+    </Text>
+    <Text id="DeselectAll">
+      <en value="Deselect all" />
+      <uk value="Зняти виділення" />
+      <ru value="Снять выделение" />
+    </Text>
+    <Text id="UserID">
+      <en value="UserID" />
+      <uk value="UserID" />
+      <ru value="UserID" />
+    </Text>
+    <Text id="TextBoxCue">
+      <en value="Enter value..." />
+      <uk value="Введіть значення..." />
+      <ru value="Введите значение..." />
+    </Text>
+    <Text id="SelectDirDialogTitle">
+      <en value="Select downloading directory" />
+      <uk value="Виберіть місце збереження фото" />
+      <ru value="Выберите место сохранения фото" />
+    </Text>
+  </UIElementsText>
+  <Messages>
+    <Text id="Error">
+      <en value="Error" />
+      <uk value="Помилка" />
+      <ru value="Ошибка" />
+    </Text>
+    <Text id="NetworkError">
+      <en value="Cannot get data from network." />
+      <uk value="Неможливо отримати дані з мережі." />
+      <ru value="Невозможно получить данные из сети." />
+    </Text>
+    <Text id="NoAlbumsAvailable">
+      <en value="No albums available." />
+      <uk value="Немає доступних альбомів." />
+      <ru value="Нет доступных альбомов." />
+    </Text>
+    <Text id="SelectAlbum">
+      <en value="Select album for viewing." />
+      <uk value="Оберіть альбом для перегляду." />
+      <ru value="Выберите альбом для просмотра." />
+    </Text>
+    <Text id="NoPhotoAvailable">
+      <en value="No photos available." />
+      <uk value="Немає доступних фото для відображення." />
+      <ru value="Нет доступных фото для отображения." />
+    </Text>
+    <Text id="NoPhotosSelected">
+      <en value="No photos selected." />
+      <uk value="Не вибрано жодного фото." />
+      <ru value="Не выбрано ни одного фото." />
+    </Text>
+    <Text id="DownloadingComplete">
+      <en value="Download complete!" />
+      <uk value="Завантаження завершено!" />
+      <ru value="Загрузка завершена!" />
+    </Text>
+  </Messages>
+</Content>

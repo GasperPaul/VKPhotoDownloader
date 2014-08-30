@@ -17,6 +17,7 @@ namespace VKPhotoDownloader
         private VKAPI vkApi;
         private DownloadData data;
         private ImageData imgData;
+        private TranslationManager tr;
 
         public MainWindow()
         {
@@ -24,11 +25,14 @@ namespace VKPhotoDownloader
             vkApi = VKAPI.Instance;
             data = new DownloadData()
             {
-                UserID = "https://vk.com/durov"
+                UserID = "1"
             };
             imgData = new ImageData();
+            tr = TranslationManager.Instance; 
             this.albumURL.DataContext = data;
             this.saveDir.DataContext = data;
+            this.languageSelector.DataContext = tr;
+            tr.CurrentLanguage = tr.Languages.First(a => a.TwoLetterISOLanguageName == tr.CurrentLanguage.TwoLetterISOLanguageName);
         }
 
         void Browser_Navigated(object sender, NavigationEventArgs e)
@@ -36,7 +40,7 @@ namespace VKPhotoDownloader
             if (e.Uri.AbsoluteUri.Contains("https://oauth.vk.com/blank.html#error"))
             {
                 string errorMsg = vkApi.HandleOAuthError(e.Uri.AbsoluteUri);
-                this.ShowMessageAsync(@"Error", errorMsg);
+                this.ShowMessageAsync(tr["Error"], errorMsg);
                 Debug.WriteLine(@"OAuth error: " + errorMsg);
                 System.Windows.Application.Current.Shutdown();
             }
@@ -50,34 +54,19 @@ namespace VKPhotoDownloader
 
         private void btnShowAlbums_Click(object sender, RoutedEventArgs e)
         {
-            if (data.UserID == null || data.UserID.Trim().Equals(@""))
+            this.albumThumbnailsHolder.Visibility = System.Windows.Visibility.Hidden;
+            this.btnNext.Visibility = System.Windows.Visibility.Collapsed;
+
+            if (string.IsNullOrWhiteSpace(data.UserID))
             {
                 albumURL.Focus();
                 return;
             }
 
-            this.albumThumbnailsHolder.Visibility = System.Windows.Visibility.Hidden;
-            this.btnNext.Visibility = System.Windows.Visibility.Collapsed;
             this.albumsProgress.IsActive = true;
 
-            try
-            {
-                string userId = data.UserID.Split('/').Last().Trim();
-                if (!userId.ToCharArray().All(ch => ch > '0' && ch < '9'))
-                {
-                    if (userId.StartsWith("id"))
-                        data.UserID = userId.Remove(0, 2);
-                    else
-                        data.UserID = (string)vkApi.ExecuteApiCommand(@"utils.resolveScreenName", @"screen_name=" + userId);
-                }
-            }
-            catch (Exception ex)
-            {
-                this.ShowMessageAsync(@"Помилка", @"Невірний формат поля ""UserID"".");
-                Debug.WriteLine("UserId error: " + ex.Message);
-                this.albumsProgress.IsActive = false;
-                return;
-            }
+            if (!string.IsNullOrWhiteSpace(data.AlbumName))
+                ShowThumbnails();
 
             var albumDownloader = new BackgroundWorker();
             albumDownloader.WorkerReportsProgress = false;
@@ -94,7 +83,7 @@ namespace VKPhotoDownloader
             }
             else
             {
-                this.ShowMessageAsync(@"", @"Немає доступних альбомів.");
+                this.ShowMessageAsync(@"", tr["NoAlbumsAvailale"]);
             }
 
             this.albumThumbnailsHolder.Visibility = System.Windows.Visibility.Visible;
@@ -110,7 +99,7 @@ namespace VKPhotoDownloader
             }
             catch (Exception ex)
             {
-                this.ShowMessageAsync(@"Помилка", @"Неможливо отримати дані з мережі.");
+                this.ShowMessageAsync(tr["Error"], tr["NetworkError"]);
                 Debug.WriteLine(@"Network Error: " + ex.Message);
             }
         }
@@ -119,7 +108,7 @@ namespace VKPhotoDownloader
         {
             using (var dlg = new System.Windows.Forms.FolderBrowserDialog()
                 {
-                    Description = @"Виберіть місце збереження фото",
+                    Description = tr["SelectDirDialogTitle"],
                     RootFolder = Environment.SpecialFolder.Desktop,
                     ShowNewFolderButton = true
                 })
@@ -136,11 +125,16 @@ namespace VKPhotoDownloader
             var selection = (this.albumThumbnails.SelectedItem as Thumbnail);
             if (selection == null || selection.Name == null)
             {
-                this.ShowMessageAsync(@"", @"Оберіть альбом для перегляду.");
+                this.ShowMessageAsync(@"", tr["SelectAlbum"]);
                 return;
             }
 
             data.AlbumName = selection.Name;
+            ShowThumbnails();
+        }
+
+        private void ShowThumbnails()
+        {
             tabControl.SelectedIndex++;
 
             this.thumbnailsHolder.Visibility = System.Windows.Visibility.Hidden;
@@ -162,7 +156,7 @@ namespace VKPhotoDownloader
             }
             else
             {
-                this.ShowMessageAsync(@"", @"Немає доступних фото для відображення.");
+                this.ShowMessageAsync(@"", tr["NoPhotoAvailable"]);
                 tabControl.SelectedIndex--;
             }
 
@@ -179,7 +173,7 @@ namespace VKPhotoDownloader
             }
             catch (Exception ex)
             {
-                this.ShowMessageAsync(@"Помилка", @"Неможливо отримати дані з мережі.");
+                this.ShowMessageAsync(tr["Error"], tr["NetworkError"]);
                 Debug.WriteLine(@"Network Error: " + ex.Message);
             }
         }
@@ -191,16 +185,15 @@ namespace VKPhotoDownloader
 
         private void btnDownload_Click(object sender, RoutedEventArgs e)
         {
-            if (data.SaveDir == null || !Directory.Exists(data.SaveDir.Trim()))
+            if (string.IsNullOrWhiteSpace(data.SaveDir))
             {
-                this.ShowMessageAsync(@"Помилка", @"Невірний формат поля ""Куди"".");
                 this.saveDir.Focus();
                 return;
             }
 
             if (imgData.ImageList == null || imgData.ImageList.Count(photo => photo.Checked) == 0)
             {
-                this.ShowMessageAsync(@"", @"Не вибрано жодного фото.");
+                this.ShowMessageAsync(@"", tr["NoPhotosSelected"]);
                 return;
             }
 
@@ -218,7 +211,7 @@ namespace VKPhotoDownloader
         void photoDownloader_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             progressBar.Visibility = System.Windows.Visibility.Collapsed;
-            this.ShowMessageAsync(@"Завантаження завершено!", @"");
+            this.ShowMessageAsync(tr["DownloadingComplete"], @"");
         }
 
         void photoDownloader_ProgressChanged(object sender, ProgressChangedEventArgs e)
@@ -250,7 +243,7 @@ namespace VKPhotoDownloader
                     }
                     catch (Exception ex)
                     {
-                        this.ShowMessageAsync(@"Помилка", @"Неможливо отримати дані з мережі.");
+                        this.ShowMessageAsync(tr["Error"], tr["NetworkError"]);
                         Debug.WriteLine(@"Network Error: " + ex.Message);
                     }
                     (sender as BackgroundWorker).ReportProgress(step);

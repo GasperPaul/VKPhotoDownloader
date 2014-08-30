@@ -10,9 +10,9 @@ using System.Windows;
 [assembly: AssemblyTitle("VKPhotoDownloader")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Microsoft")]
+[assembly: AssemblyCompany("Gasper")]
 [assembly: AssemblyProduct("VKPhotoDownloader")]
-[assembly: AssemblyCopyright("Copyright © Microsoft 2013")]
+[assembly: AssemblyCopyright("Copyright © Gasper, Creative Commons BY-NC 2013")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

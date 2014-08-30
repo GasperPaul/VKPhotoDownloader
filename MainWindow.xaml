@@ -16,7 +16,7 @@
             <Style.Resources>
                 <VisualBrush x:Key="CueBannerBrush" Stretch="None">
                     <VisualBrush.Visual>
-                        <Label Content="Enter value..." Foreground="LightGray" />
+                        <Label Content="{local:Translate TextBoxCue}" Foreground="LightGray" />
                     </VisualBrush.Visual>
                 </VisualBrush>
             </Style.Resources>
@@ -28,6 +28,19 @@
                     <Setter Property="Background" Value="{DynamicResource CueBannerBrush}" />
                 </Trigger>
             </Style.Triggers>
+            <Setter Property="Validation.ErrorTemplate">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <DockPanel LastChildFill="True">
+                            <TextBlock DockPanel.Dock="Bottom" Foreground="White" Background="Red"
+                                       Text="{Binding AdornedElement.(Validation.Errors)[0].ErrorContent, ElementName=Adorner}" />
+                            <Border BorderBrush="Red" BorderThickness="1">
+                                <AdornedElementPlaceholder Name="Adorner"/>
+                            </Border>
+                        </DockPanel>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
         <!-- Template and style for images list box. -->
         <DataTemplate x:Key="thumbnailsListItem">
@@ -55,7 +68,7 @@
         </Style>
         <!-- Arrow images. -->
         <Canvas x:Key="appbar_arrow_right" Width="76" Height="76" Clip="F1 M 0,0L 76,0L 76,76L 0,76L 0,0">
-            <Path Width="39.25" Height="28" Canvas.Left="19.0002" Canvas.Top="24" Stretch="Fill" Fill="{DynamicResource BlackBrush}" Data="F1 M 19.0002,34L 19.0002,42L 43.7502,42L 33.7502,52L 44.2502,52L 58.2502,38L 44.2502,24L 33.7502,24L 43.7502,34L 19.0002,34 Z "/>
+            <Path Width="39.25" Height="28" Canvas.Left="19.0002" Canvas.Top="24" Stretch="Fill" Fill="{StaticResource BlackBrush}" Data="F1 M 19.0002,34L 19.0002,42L 43.7502,42L 33.7502,52L 44.2502,52L 58.2502,38L 44.2502,24L 33.7502,24L 43.7502,34L 19.0002,34 Z "/>
         </Canvas>
         <Canvas x:Key="appbar_arrow_left" Width="76" Height="76" Clip="F1 M 0,0L 76,0L 76,76L 0,76L 0,0">
             <Path Width="39.25" Height="28" Canvas.Left="17.75" Canvas.Top="24" Stretch="Fill" Fill="{DynamicResource BlackBrush}" Data="F1 M 57,42L 57,34L 32.25,34L 42.25,24L 31.75,24L 17.75,38L 31.75,52L 42.25,52L 32.25,42L 57,42 Z "/>
@@ -67,24 +80,118 @@
             <Setter Property="ClipToBounds" Value="True" />
         </Style>
         <Style x:Key="btnNext" TargetType="Button" BasedOn="{StaticResource flatButton}">
-            <Setter Property="Content">
+            <Setter Property="ContentTemplate">
                 <Setter.Value>
-                    <Rectangle Width="25" Height="25" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">
-                        <Rectangle.OpacityMask>
-                            <VisualBrush Stretch="Fill" Visual="{StaticResource appbar_arrow_right}"/>
-                        </Rectangle.OpacityMask>
-                    </Rectangle>
+                    <DataTemplate>
+                        <Rectangle Width="25" Height="25" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">
+                            <Rectangle.OpacityMask>
+                                <VisualBrush Stretch="Fill" Visual="{StaticResource appbar_arrow_right}"/>
+                            </Rectangle.OpacityMask>
+                        </Rectangle>
+                    </DataTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
         <Style x:Key="btnPrevious" TargetType="Button" BasedOn="{StaticResource flatButton}">
-            <Setter Property="Content">
+            <Setter Property="ContentTemplate">
                 <Setter.Value>
-                    <Rectangle Width="25" Height="25" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">
-                        <Rectangle.OpacityMask>
-                            <VisualBrush Stretch="Fill" Visual="{StaticResource appbar_arrow_left}"/>
-                        </Rectangle.OpacityMask>
-                    </Rectangle>
+                    <DataTemplate>
+                        <Rectangle Width="25" Height="25" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">
+                            <Rectangle.OpacityMask>
+                                <VisualBrush Stretch="Fill" Visual="{StaticResource appbar_arrow_left}"/>
+                            </Rectangle.OpacityMask>
+                        </Rectangle>
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!-- Helper overlay style. -->
+        <Style x:Key="HelpOverlayStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="DarkGray" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Style.Triggers>
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding ItemsSource, ElementName=albumThumbnails}" Value="{x:Null}" />
+                        <Condition Binding="{Binding IsActive, ElementName=albumsProgress}" Value="False" />
+                    </MultiDataTrigger.Conditions>
+                    <MultiDataTrigger.Setters>
+                        <Setter Property="Text" Value="Введіть&#13;ID користувача&#13;&#9;id1 або 1&#13;посилання на його акаунт&#13;&#9;https://vk.com/albums1&#13;&#9;https://vk.com/durov&#13;&#9;vk.com/durov&#13;&#9;durov&#13;чи посилання на конкретний альбом&#13;&#9;https://vk.com/album1_0" />
+                    </MultiDataTrigger.Setters>
+                </MultiDataTrigger>
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding Visibility, ElementName=albumThumbnailsHolder}" Value="Hidden" />
+                        <Condition Binding="{Binding IsActive, ElementName=albumsProgress}" Value="False" />
+                    </MultiDataTrigger.Conditions>
+                    <MultiDataTrigger.Setters>
+                        <Setter Property="Text" Value="Введіть&#13;ID користувача&#13;&#9;id1 або 1&#13;посилання на його акаунт&#13;&#9;https://vk.com/albums1&#13;&#9;https://vk.com/durov&#13;&#9;vk.com/durov&#13;&#9;durov&#13;чи посилання на конкретний альбом&#13;&#9;https://vk.com/album1_0" />
+                    </MultiDataTrigger.Setters>
+                </MultiDataTrigger>
+            </Style.Triggers>
+        </Style>
+        <!-- Language selector style. -->
+        <Style x:Key="LanguageSelectorStyle" TargetType="{x:Type ComboBox}">
+            <Setter Property="UIElement.SnapsToDevicePixels" Value="True"/>
+            <Setter Property="FrameworkElement.OverridesDefaultStyle" Value="True"/>
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="ScrollViewer.CanContentScroll" Value="True"/>
+            <Setter Property="TextElement.Foreground" Value="{DynamicResource {x:Static SystemColors.GradientActiveCaptionBrushKey}}"/>
+            <Setter Property="FrameworkElement.FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Control.Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <ToggleButton Name="ToggleButton" Grid.ColumnSpan="2"
+                                          ClickMode="Press" Focusable="False"
+                                          IsChecked="{Binding Path=IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border Name="Border" BorderThickness="0"
+                                                Background="{Binding Background, RelativeSource={RelativeSource TemplatedParent}}" />
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <TextBlock Grid.Column="0" Text="{local:Translate Language}" IsHitTestVisible="False" 
+                                       VerticalAlignment="Center" HorizontalAlignment="Center"
+                                       Foreground="{DynamicResource {x:Static SystemColors.GradientActiveCaptionBrush}}" />
+                            <ContentPresenter Name="ContentSite" Grid.Column="1"
+                                              Margin="5" IsHitTestVisible="False"
+                                              HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              Content="{TemplateBinding ComboBox.SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding ComboBox.SelectionBoxItemTemplate}"
+                                              ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}" />
+                            <!-- Popup showing items -->
+                            <Popup Name="Popup" Placement="Bottom"
+                                   Focusable="False" AllowsTransparency="True"
+                                   IsOpen="{TemplateBinding ComboBox.IsDropDownOpen}"
+                                   PopupAnimation="Slide">
+                                <Grid Name="DropDown" SnapsToDevicePixels="True"
+                                      MinWidth="{TemplateBinding FrameworkElement.ActualWidth}"
+                                      MaxHeight="{TemplateBinding ComboBox.MaxDropDownHeight}">
+                                    <Border Name="DropDownBorder" BorderThickness="1"
+                                            Background="{DynamicResource {x:Static SystemColors.WindowFrameBrushKey}}" BorderBrush="WhiteSmoke"/>
+                                    <ScrollViewer Margin="4" SnapsToDevicePixels="True">
+                                        <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" />
+                                    </ScrollViewer>
+                                </Grid>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="ItemsControl.HasItems" Value="False">
+                                <Setter Property="FrameworkElement.MinHeight" TargetName="DropDownBorder" Value="95"/>
+                            </Trigger>
+                            <Trigger Property="ItemsControl.IsGrouping" Value="True">
+                                <Setter Property="ScrollViewer.CanContentScroll" Value="False"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
@@ -92,10 +199,12 @@
 
     <controls:MetroWindow.WindowCommands>
         <controls:WindowCommands>
-            <Button Content="Про програму" Click="btnAbout_Click" />
+            <ComboBox Style="{StaticResource LanguageSelectorStyle}" ItemsSource="{Binding Languages}" SelectedItem="{Binding CurrentLanguage}" Name="languageSelector" DisplayMemberPath="TwoLetterISOLanguageName" />
+            <Button Width="10" />
+            <Button Content="{local:Translate About}" Click="btnAbout_Click" />
         </controls:WindowCommands>
     </controls:MetroWindow.WindowCommands>
-    
+
     <TabControl Name="tabControl">
         <TabItem>
             <Grid>
@@ -116,11 +225,10 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <Label Grid.Row="0" Grid.Column="0" Content="UserID" />
+                <Label Grid.Row="0" Grid.Column="0" Content="{local:Translate UserID}" />
                 <TextBox Grid.Row="0" Grid.Column="1" Name="albumURL" 
-                         ToolTip="Формати вводу:&#13;https://vk.com/durov&#13;durov&#13;id1&#13;1"
-                         Style="{StaticResource CueStyle}" Text="{Binding UserID}" />
-                <Button Grid.Row="0" Grid.Column="2" Content="Показати альбоми" Click="btnShowAlbums_Click"/>
+                         Style="{StaticResource CueStyle}" Text="{Binding UserID, ValidatesOnExceptions=True}" />
+                <Button Grid.Row="0" Grid.Column="2" Content="{local:Translate ShowAlbums}" Click="btnShowAlbums_Click"/>
                 <Grid Grid.Row="1" Grid.Column="0" 
                       Grid.RowSpan="1" Grid.ColumnSpan="3" >
                     <Grid.ColumnDefinitions>
@@ -128,6 +236,7 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <controls:ProgressRing Name="albumsProgress" Grid.Column="0" />
+                    <TextBlock Grid.Column="0" Style="{StaticResource HelpOverlayStyle}" />
                     <ScrollViewer Grid.Column="0"
                                   Name="albumThumbnailsHolder"
                                   VerticalScrollBarVisibility="Auto" 
@@ -140,7 +249,7 @@
                     </ScrollViewer>
                     <Button Grid.Column="1" Name="btnNext"
                             Style="{StaticResource btnNext}" 
-                            Click="btnNext_Click" />
+                            Click="btnNext_Click" Visibility="Collapsed"/>
                 </Grid>
             </Grid>
         </TabItem>
@@ -164,12 +273,12 @@
                 <Button Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" 
                         Style="{StaticResource btnPrevious}" 
                         Click="btnPrevious_Click" />
-                <Label Grid.Row="0" Grid.Column="1" Content="Куди" />
+                <Label Grid.Row="0" Grid.Column="1" Content="{local:Translate SaveDirectory}" />
                 <TextBox Grid.Row="0" Grid.Column="2" Name="saveDir" 
-                         Style="{DynamicResource CueStyle}" Text="{Binding SaveDir}"/>
-                <Button Grid.Row="0" Grid.Column="3" Content="Огляд..." Click="btnTo_Click" />
-                <Button Grid.Row="0" Grid.Column="4" Content="Виділити всі" Click="btnSelectAll_Click" />
-                <Button Grid.Row="0" Grid.Column="5" Content="Зняти виділення" Click="btnDeselectAll_Click" />
+                         Style="{StaticResource CueStyle}" Text="{Binding SaveDir, ValidatesOnExceptions=True}"/>
+                <Button Grid.Row="0" Grid.Column="3" Content="{local:Translate DirSearch}" Click="btnTo_Click" />
+                <Button Grid.Row="0" Grid.Column="4" Content="{local:Translate SelectAll}" Click="btnSelectAll_Click" />
+                <Button Grid.Row="0" Grid.Column="5" Content="{local:Translate DeselectAll}" Click="btnDeselectAll_Click" />
                 <controls:ProgressRing Name="thumbnailsProgress" 
                                        Grid.Row="1" Grid.Column="1"
                                        Grid.RowSpan="1" Grid.ColumnSpan="5" />

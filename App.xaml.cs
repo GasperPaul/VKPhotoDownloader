@@ -13,5 +13,10 @@ namespace VKPhotoDownloader
     /// </summary>
     public partial class App : Application
     {
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            TranslationManager.Instance.TranslationProvider = new XMLTranslationProvider("Translations.xml");
+            base.OnStartup(e);
+        }
     }
 }
